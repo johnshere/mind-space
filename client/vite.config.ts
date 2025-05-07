@@ -9,8 +9,9 @@ import packageJson from './package.json' assert { type: 'json' }
 import { titleCase } from './src/libs/case'
 
 export default defineConfig(() => {
+  const base = `/${packageJson.name}`
   return {
-    base: `/${packageJson.name}`,
+    base,
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
