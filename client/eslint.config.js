@@ -22,18 +22,9 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      'prettier/prettier': [
-        'error',
-        {
-          singleQuote: true,
-          semi: false,
-          tabWidth: 2,
-          useTabs: false,
-          trailingComma: 'none'
-        }
-      ],
-      quotes: ['error', 'single'],
-      'comma-dangle': ['error', 'never'],
+      'prettier/prettier': 'error', // 移除具体配置，让 ESLint 使用 .prettierrc 的配置
+      quotes: 'off', // 关闭 ESLint 自带的引号规则，由 Prettier 处理
+      'comma-dangle': 'off', // 关闭 ESLint 自带的尾逗号规则，由 Prettier 处理
       'vue/multi-word-component-names': 'off'
     }
   }
