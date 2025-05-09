@@ -1,76 +1,55 @@
-import type { App } from 'vue'
+import { type App } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
-import type {
-  RouteRecordRaw,
-  RouteRecordSingleViewWithChildren
-} from 'vue-router'
+import type { RouteRecordSingleViewWithChildren } from 'vue-router'
 import { useGuards } from './guards'
-import { camelToSnake } from '@/libs/util'
+
+const routes = [] as RouteRecordSingleViewWithChildren[]
 
 const error = (message: string) => {
   throw new Error(message)
 }
 
-const layoutFiles: any = import.meta.glob('@/components/layouts/*/index.vue', {
-  eager: true
-})
-const layouts = [] as RouteRecordSingleViewWithChildren[]
-const layoutReg = /\/src\/components\/layouts\/(.*)\/index\.vue/
-for (const layoutPath in layoutFiles) {
-  const $layout = layoutFiles[layoutPath].default
-  if (!$layout) continue
-  const name = layoutReg.exec(layoutPath)![1]
-  layouts.push({
-    path: $layout.path || '',
-    name,
-    component: $layout,
-    children: []
-  })
+const views = import.meta.glob<View>('@/views/**/index.vue', { eager: true })
+const pathReg = /\/src\/views(\/.*)\/index\.vue/
+const getFolders = (path: string) => {
+  return pathReg.exec(path)?.[1].split('/').filter(Boolean) ?? []
 }
-
-const views: any = import.meta.glob('@/views/**/index.vue', { eager: true })
-const viewReg = /\/src\/views\/(.*)\/index\.vue/
-
-for (const componentPath in views) {
-  const $component = views[componentPath].default
-  if ($component) {
-    const { title, hidden, pathMatch } = $component
-    if (hidden) continue
-    if (title === undefined || title === null) {
-      error(`the title of view page(${componentPath}) can not be empty`)
-      break
-    }
-    const layoutName = $component.layout?.toLowerCase() || 'main'
-    const layout = layouts.find(
-      (l) => (l.name as string).toLowerCase() === layoutName
-    )!
-    const layoutChildren = layout.children
-
-    let paths = viewReg.exec(componentPath)![1].split('/')
-    paths = paths.map((p) => camelToSnake(p, '-'))
-    if (paths.concat().shift()?.toLowerCase() === layout.path.toLowerCase())
-      paths.shift()
-    layoutChildren.push({
-      path: paths.join('/') + (pathMatch || ''),
-      name: layoutName + '-' + paths.join('-'),
-      component: $component,
-      meta: { title }
-    })
+const getName = (path: string) => {
+  return getFolders(path).join('-')
+}
+const components = Object.values(views).map((v) => v.default)
+const isPageReg = /\/index\.vue$/
+for (const component of components) {
+  const { title, match, __file: filePath } = component
+  if (!isPageReg.test(filePath)) continue
+  if (title === undefined || title === null) {
+    error(`the title of view page(${filePath}) can not be empty`)
+    break
+  }
+  const name = getName(filePath)
+  const folders = getFolders(filePath)
+  const route = {
+    path: folders.concat().pop() + (match || ''),
+    name,
+    component: component,
+    meta: { title },
+    children: [] as RouteRecordSingleViewWithChildren[]
+  }
+  if (folders.length > 1) {
+    const parent = routes.find((r) => name.startsWith(r.name as string))
+    parent?.children.push(route)
+  } else {
+    route.path = `/${route.path}`
+    routes.push(route)
   }
 }
 
-const Root: RouteRecordRaw = {
-  path: '/',
-  name: 'Root',
-  component: layouts.find((lay) => lay.name === 'Empty')!.component,
-  children: layouts
-}
-
-export const routes = [Root]
-
 export const setupRouter = async (app: App) => {
   const base = import.meta.env.BASE_URL
-  const router = createRouter({ history: createWebHistory(base), routes })
+  const router = createRouter({
+    history: createWebHistory(base),
+    routes
+  })
 
   useGuards(router)
   app.use(router)
