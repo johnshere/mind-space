@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
+import AutoImport from 'unplugin-auto-import/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import environment from 'vite-plugin-environment'
 import vue from '@vitejs/plugin-vue'
@@ -20,11 +21,19 @@ export default defineConfig(() => {
     },
     plugins: [
       vue(),
+      AutoImport({
+        imports: ['vue', 'vue-router', 'pinia'],
+        dts: 'src/auto-imports.d.ts',
+        eslintrc: {
+          enabled: true
+        }
+      }),
       vueJsx(),
       VueDevTools(),
       environment(
         {
-          APP_NAME: titleCase(packageJson.name),
+          APP_TITLE: titleCase(packageJson.name),
+          APP_NAME: packageJson.name,
           APP_VERSION: packageJson.version
         },
         { defineOn: 'import.meta.env' }

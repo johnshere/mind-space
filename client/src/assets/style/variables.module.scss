@@ -1,0 +1,35 @@
+// 颜色变量
+$primary-color: #409eff;
+$success-color: #67c23a;
+$warning-color: #e6a23c;
+$danger-color: #f56c6c;
+$info-color: #909399;
+
+// 字体变量
+$font-family:
+  'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+  'Microsoft YaHei', sans-serif;
+$font-size-base: 14px;
+$font-size-small: 12px;
+
+// 间距变量
+$spacing-base: 16px;
+$spacing-small: 8px;
+$spacing-large: 24px;
+
+// 边框变量
+$border-radius-base: 4px;
+$border-color-base: #dcdfe6;
+
+// 定义命名空间和分隔符
+$namespace: 'ms' !default;
+$block-separator: '-' !default;
+$element-separator: '_' !default;
+$modifier-separator: '--' !default;
+
+:export {
+  namespace: $namespace;
+  blockSeparator: $block-separator;
+  elementSeparator: $element-separator;
+  modifierSeparator: $modifier-separator;
+}

@@ -1,46 +1,49 @@
 import { type App } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
-import type { RouteRecordSingleViewWithChildren } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 import { useGuards } from './guards'
 
-const routes = [] as RouteRecordSingleViewWithChildren[]
-
-const error = (message: string) => {
-  throw new Error(message)
+const routes = [] as RouteRecordRaw[]
+const findParent = (
+  fn: (r: RouteRecordRaw) => boolean,
+  rs?: RouteRecordRaw[]
+): RouteRecordRaw | undefined => {
+  rs = rs || routes
+  for (const r of rs) {
+    const p = findParent(fn, r.children)
+    if (p) return p
+    if (fn(r)) return r
+  }
 }
 
 const views = import.meta.glob<View>('@/views/**/index.vue', { eager: true })
-const pathReg = /\/src\/views(\/.*)\/index\.vue/
-const getFolders = (path: string) => {
-  return pathReg.exec(path)?.[1].split('/').filter(Boolean) ?? []
-}
-const getName = (path: string) => {
-  return getFolders(path).join('-')
-}
-const components = Object.values(views).map((v) => v.default)
-const isPageReg = /\/index\.vue$/
+const getFolders = (path: string) =>
+  /\/views(\/.*)\/index\.vue/.exec(path)?.[1]?.split('/').filter(Boolean) ?? []
+const getName = (...paths: string[]) => paths.filter(Boolean).join('-')
+const components = Object.values(views)
+  .map((v) => v.default)
+  .sort((a, b) => getFolders(a.__file).length - getFolders(b.__file).length)
 for (const component of components) {
-  const { title, match, __file: filePath } = component
-  if (!isPageReg.test(filePath)) continue
+  const { title, match, __file } = component
+  if (!__file.endsWith('/index.vue')) continue
   if (title === undefined || title === null) {
-    error(`the title of view page(${filePath}) can not be empty`)
-    break
+    throw new Error(`the title of view page(${__file}) can not be empty`)
   }
-  const name = getName(filePath)
-  const folders = getFolders(filePath)
+  const folders = getFolders(__file)
+  const name = getName(...folders)
+  const path = folders.concat().pop() ?? ''
   const route = {
-    path: folders.concat().pop() + (match || ''),
+    path: path + (match || ''),
     name,
     component: component,
     meta: { title },
-    children: [] as RouteRecordSingleViewWithChildren[]
+    children: [] as RouteRecordRaw[]
   }
-  if (folders.length > 1) {
-    const parent = routes.find((r) => name.startsWith(r.name as string))
-    parent?.children.push(route)
+  if (!folders.length) {
+    routes.push({ ...route, path: '/' })
   } else {
-    route.path = `/${route.path}`
-    routes.push(route)
+    const parent = findParent((r) => name === getName(r.name as any, path))
+    parent?.children?.push(route)
   }
 }
 
