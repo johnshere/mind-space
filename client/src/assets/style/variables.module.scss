@@ -24,7 +24,7 @@ $border-color-base: #dcdfe6;
 // 定义命名空间和分隔符
 $namespace: 'ms' !default;
 $block-separator: '-' !default;
-$element-separator: '_' !default;
+$element-separator: '__' !default;
 $modifier-separator: '--' !default;
 
 :export {
