@@ -1,12 +1,9 @@
 <template>
-  <div>
-    test
-    <RouterView />
-  </div>
+  <div>mind</div>
 </template>
 
 <script lang="ts">
 export default {
-  title: 'test'
+  title: 'mind'
 }
 </script>

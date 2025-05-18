@@ -7,7 +7,11 @@ const config: Config = {
   transform: {
     '^.+\\.ts$': 'ts-jest'
   },
-  testMatch: ['**/__tests__/**/*.test.ts']
+  testMatch: ['**/__tests__/**/*.test.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '\\.(module\\.)?(css|less|scss|sass)$': 'identity-obj-proxy'
+  }
 }
 
 export default config
