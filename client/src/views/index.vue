@@ -2,7 +2,7 @@
   <div :class="ns.b">
     <div :class="ns.e('header')">
       <div :class="ns.e('header-left')">
-        <img src="@/assets/imgs/logo/64.png" alt="系统logo" :class="ns.m('logo')" />
+        <img src="@/assets/imgs/logo/64.png" alt="系统logo" :class="ns.em('header-left', 'logo')" />
         <h1 :class="ns.m('title')">{{ title }}</h1>
       </div>
       <div :class="ns.e('header-right')">
@@ -49,7 +49,7 @@ function openSettings() {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 16px;
+    padding: 0 18px;
     background-color: #f5f5f5;
     border-bottom: 1px solid #ddd;
   }
@@ -57,29 +57,29 @@ function openSettings() {
   @include e(header-left) {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 18px;
 
     @include m(logo) {
-      height: 40px;
+      height: 48px;
     }
 
     @include m(title) {
       margin: 0;
-      font-size: 20px;
+      font-size: 18px;
     }
   }
 
   @include e(header-right) {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 18px;
 
     @include m(status) {
       color: #666;
     }
 
     button {
-      padding: 8px 16px;
+      padding: 6px 18px;
       border: 1px solid #ddd;
       border-radius: 4px;
       background-color: white;
