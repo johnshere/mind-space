@@ -1,7 +1,8 @@
 <template>
   <div>
-    <div :class="ns.e('wrap')">outline
-      <Node :data="storageData.data" :storageData="storageData" />
+    <div :class="ns.e('wrap')">
+      outline
+      <Node :node="store.node" :store="store" />
     </div>
   </div>
 </template>
@@ -9,12 +10,12 @@
 export default { title: 'outline' }
 </script>
 <script lang="ts" setup>
-import Node from '@/components/node/index.vue';
-import { useNamespace } from '@/hooks/useNamespace';
-import { useNodeStorage } from '@/hooks/useNodeStorage';
-import { uuid } from '@/libs/util';
+import Node from '@/components/node/index.vue'
+import { useNamespace } from '@/hooks/useNamespace'
+import { useNodeStore } from '@/hooks/useNodeStore'
+import { uuid } from '@/libs/util'
 
-const ns = useNamespace('outline');
+const ns = useNamespace('outline')
 
 const route = useRoute()
 const router = useRouter()
@@ -26,7 +27,7 @@ if (!id) {
   const path = route.path
   router.replace({ path, query: { id } })
 }
-const storageData = useNodeStorage(id)
+const store = useNodeStore(id)
 </script>
 <style lang="scss" scoped>
 @use '@/assets/style/mixins' as *;

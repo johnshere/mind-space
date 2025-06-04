@@ -3,9 +3,9 @@
  * @param nodes NodeStore列表
  * @returns 树形结构的Node数组
  */
-export function listToTree(nodes: NodeStore[]): NodeTree[] {
-  const nodeMap = new Map<string, NodeTree>()
-  const tree: NodeTree[] = []
+export function listToTree(nodes: NodeData[]): NodeDataTree[] {
+  const nodeMap = new Map<string, NodeDataTree>()
+  const tree: NodeDataTree[] = []
 
   // 第一遍：创建所有节点的映射
   nodes.forEach((node) => {
@@ -20,7 +20,10 @@ export function listToTree(nodes: NodeStore[]): NodeTree[] {
     } else {
       const parentNode = nodeMap.get(node.parentId)
       if (parentNode) {
-        parentNode.children.push(currentNode)
+        if (!parentNode.children) {
+          parentNode.children = []
+        }
+        parentNode.children?.push(currentNode)
       }
     }
   })
@@ -33,13 +36,13 @@ export function listToTree(nodes: NodeStore[]): NodeTree[] {
  * @param tree 树形结构的Node数组
  * @returns 展平后的NodeStore列表
  */
-export function treeToList(tree: NodeTree): NodeStore[] {
-  const result: NodeStore[] = []
+export function treeToList(tree: NodeDataTree): NodeData[] {
+  const result: NodeData[] = []
 
-  function traverse(node: NodeTree) {
-    const rest = { ...node } as Partial<NodeTree>
+  function traverse(node: NodeDataTree) {
+    const rest = { ...node } as Partial<NodeDataTree>
     delete rest.children
-    result.push(rest as NodeStore)
+    result.push(rest as NodeData)
     node.children?.forEach((child) => traverse(child))
   }
 

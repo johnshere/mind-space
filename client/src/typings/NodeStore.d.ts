@@ -1,4 +1,5 @@
-interface NodeStorage {
-  allData: Map<string, NodeStore>
-  data: NodeTree
+interface NodeStore {
+  allData: Map<string, NodeData>
+  data: NodeDataTree
+  node: NodeTree
 }

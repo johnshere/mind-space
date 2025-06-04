@@ -2,7 +2,11 @@
   <div :class="ns.b">
     <div :class="ns.e('header')">
       <div :class="ns.e('header-left')">
-        <img src="@/assets/imgs/logo/64.png" alt="系统logo" :class="ns.em('header-left', 'logo')" />
+        <img
+          src="@/assets/imgs/logo/64.png"
+          alt="系统logo"
+          :class="ns.em('header-left', 'logo')"
+        />
         <h1 :class="ns.m('title')">{{ title }}</h1>
       </div>
       <div :class="ns.e('header-right')">
@@ -22,7 +26,7 @@ export default {
 }
 </script>
 <script lang="ts" setup>
-import { useNamespace } from '@/hooks/useNamespace';
+import { useNamespace } from '@/hooks/useNamespace'
 
 const title = import.meta.env.APP_TITLE
 
@@ -86,6 +90,5 @@ function openSettings() {
       cursor: pointer;
     }
   }
-
 }
 </style>

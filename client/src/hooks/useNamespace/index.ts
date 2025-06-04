@@ -12,12 +12,14 @@ export const useNamespace = (block: string) => {
     config
   const b = `${namespace}${blockSeparator}${block}`
 
-  const e = (element: string) => `${b}${elementSeparator}${element}`
+  let _e: string
+  const e = (ele: string) => `${b}${elementSeparator}${(_e = ele)}`
 
-  const m = (modifier: string) => `${b}${modifierSeparator}${modifier}`
+  const m = (mod: string) =>
+    `${b}${elementSeparator}${_e}${modifierSeparator}${mod}`
 
-  const em = (element: string, modifier: string) =>
-    `${b}${elementSeparator}${element}${modifierSeparator}${modifier}`
+  const em = (ele: string, mod: string) =>
+    `${b}${elementSeparator}${ele}${modifierSeparator}${mod}`
 
   return {
     b,
