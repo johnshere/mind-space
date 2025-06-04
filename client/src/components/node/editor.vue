@@ -1,14 +1,16 @@
 <template>
-  <div
-    ref="elRef"
-    :class="ns.b"
-    :contenteditable="editing"
-    @click="handleClick"
-    @blur="handleBlur"
-    @keydown="handleKeydown"
-    @keyup="handleKeyup"
-    v-html="html"
-  />
+  <div :class="ns.e('wrap')">
+    <div
+      ref="elRef"
+      :class="ns.e('area')"
+      :contenteditable="editing"
+      @click="handleClick"
+      @blur="handleBlur"
+      @keydown="handleKeydown"
+      @keyup="handleKeyup"
+      v-html="html"
+    />
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -21,6 +23,7 @@ import {
   flip,
   shift
 } from '@floating-ui/dom'
+import { ProvideKey } from '@/hooks/useNodeStore'
 
 const ns = useNamespace('node-editor')
 
@@ -31,10 +34,6 @@ const props = defineProps({
   },
   'onUpdate:modelValue': {
     type: Function as PropType<(value: string) => void>
-  },
-  store: {
-    type: Object as PropType<NodeStore>,
-    required: true
   },
   onSingleEnter: {
     type: Function as PropType<
@@ -47,16 +46,18 @@ const props = defineProps({
       (e: KeyboardEvent) => boolean | void | Promise<boolean | void>
     >,
     default: () => () => false
+  },
+  onBlur: {
+    type: Function as PropType<() => void>,
+    default: () => () => {}
   }
 })
+const store = inject(ProvideKey)
 
 const elRef = ref<HTMLElement>()
-function focus() {
-  handleClick()
-}
-function blur() {
-  elRef.value?.blur()
-}
+
+const focus = () => handleClick()
+const blur = () => elRef.value?.blur()
 defineExpose({ focus, blur })
 
 const extractorId = 'plain-text-extractor'
@@ -93,6 +94,8 @@ function handleBlur() {
     hidePopover()
     props['onUpdate:modelValue']?.(elRef.value?.innerHTML as string)
     editing.value = false
+    props.onBlur?.()
+    store?.setStorage()
   }
 }
 async function handleKeydown(e: KeyboardEvent) {
@@ -224,11 +227,12 @@ async function handlePopover() {
     document.body.appendChild(popContent)
   }
   popContent.textContent = ''
-  Array.from(props.store.allData.values()).forEach((node) => {
-    if (!node.title.includes(txt)) return
+  if (!store) return
+  Array.from(store.map.values()).forEach((data) => {
+    if (!data.title.includes(txt)) return
     const op = document.createElement('div')
     op.className = 'mention-option'
-    op.innerHTML = node.title.replace(txt, `<i class="mention">${txt}</i>`)
+    op.innerHTML = data.title.replace(txt, `<i class="mention">${txt}</i>`)
     popContent?.appendChild(op)
   })
   // 创建或更新popover
@@ -250,7 +254,8 @@ async function handlePopover() {
 <style lang="scss" scoped>
 @use '@/assets/style/mixins' as *;
 
-@include b(node-editor) {
+@include b(node-editor);
+@include e(area) {
   font-size: 16px;
   height: 30px;
   width: 100%;
@@ -277,6 +282,7 @@ async function handlePopover() {
   cursor: pointer;
   text-decoration: underline;
 }
+
 .mention-popover {
   position: absolute;
   z-index: 999;
@@ -287,14 +293,17 @@ async function handlePopover() {
   padding: 5px;
   max-height: 200px;
   overflow-y: auto;
+
   .mention-option {
     padding: 5px;
     cursor: pointer;
     outline: none;
+
     &.selected,
     &:focus {
       background-color: #e0e0e0;
     }
+
     &:hover {
       background-color: #f0f0f0;
     }

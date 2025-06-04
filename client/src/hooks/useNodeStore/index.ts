@@ -1,68 +1,111 @@
 import { listToTree, treeToList } from '@/libs/treeUtils'
 import { uuid } from '@/libs/util'
+import { InjectionKey } from 'vue'
 
 /**
  * 缓存id
  */
 export const StorageId = 'MindSpaceStorageId'
 
-export const useNodeStore = (id: string): NodeStore => {
-  const getCache = (): Map<string, NodeData> => {
-    const cache = localStorage.getItem(StorageId)
-    if (cache) {
-      return new Map(Object.entries(JSON.parse(cache)))
+export const ProvideKey: InjectionKey<NodeStore> = Symbol('NodeStoreProvideKey')
+
+const getCache = (): Map<string, NodeData> => {
+  const cache = localStorage.getItem(StorageId)
+  if (cache) {
+    return new Map(Object.entries(JSON.parse(cache)))
+  } else {
+    return new Map()
+  }
+}
+
+const map = getCache()
+
+const setTree = (data: NodeTree) => {
+  treeToList(data).forEach((item) => {
+    if (map.get(item.id)) {
+      map.set(item.id, item)
     } else {
-      return new Map()
+      map.set(item.id, item)
     }
-  }
+  })
+  const cacheData = Object.fromEntries(map)
+  localStorage.setItem(StorageId, JSON.stringify(cacheData))
+}
 
-  const allData = getCache()
+const newNodeTree = (pId: string, prevId?: string, title: string = '') => {
+  return {
+    id: uuid(),
+    parentId: pId,
+    prevId: prevId || undefined,
+    nextId: undefined,
+    title
+  } as NodeTree
+}
 
-  const set = (data: NodeDataTree) => {
-    treeToList(data)
-      .filter((item) => !!item.title)
-      .forEach((item) => {
-        if (allData.get(item.id)) {
-          allData.set(item.id, item)
-        } else {
-          allData.set(item.id, item)
-        }
-      })
-    const cacheData = Object.fromEntries(allData)
-    localStorage.setItem(StorageId, JSON.stringify(cacheData))
+const getTree = (id: string) => {
+  const allTree = listToTree(Array.from(map.values()))
+  let tree = allTree?.find((item) => item.id === id)
+  if (!tree) {
+    const child = newNodeTree(id)
+    child.title = '标题'
+    tree = {
+      id,
+      title: '',
+      hidden: true,
+      children: [child]
+    } as any as NodeTree
+    setTree(tree)
   }
-  const get = () => {
-    const allTree = listToTree(Array.from(allData.values()))
-    let tree = allTree?.find((item) => item.id === id)
-    if (!tree) {
-      tree = {
-        id,
-        title: '',
-        hidden: true,
-        children: [{ id: uuid(), title: '标题' }]
-      } as any as NodeDataTree
-      set(tree)
-    }
+  return tree
+}
+
+const findParent = (
+  node: NodeTree | string,
+  tree: NodeTree
+): NodeTree | null => {
+  const pId = typeof node === 'string' ? node : node.parentId
+  if (tree.id === pId) {
     return tree
   }
-  const data = get()
-  const traserve = (d: NodeDataTree) => {
-    const node = { data: d } as NodeTree
-    if (d.children?.length) {
-      node.children = d.children.map((item) => traserve(item))
+  for (const child of tree.children || []) {
+    const parent = findParent(node, child)
+    if (parent) {
+      return parent
     }
-    return node
   }
-  const node = traserve(data)
-  const state = reactive({
-    data,
-    node
-  })
-  watch(() => state.data, set, { deep: true, immediate: true })
+  return null
+}
 
-  return {
-    allData,
-    data: state.data,
-    node: state.node
+export type NodeStore = ReturnType<typeof useNodeStore>
+
+export const useNodeStore = (id: string) => {
+  const root = reactive(getTree(id))
+
+  const setStorage = () => setTree(root)
+
+  const nodeExposedMap = new Map<string, any>()
+  const registerNode = (nodeId: string, instance: any) => {
+    if (!nodeId || !instance) {
+      throw new Error('Node ID and instance are required')
+    }
+    nodeExposedMap.set(nodeId, instance)
   }
+
+  const nodeFocus = async (nodeId: string) => {
+    await nextTick()
+    nodeExposedMap.get(nodeId)?.focus()
+  }
+
+  const insertNewNodeAfter = async (node: NodeTree) => {
+    const parent = findParent(node, root)
+    if (!parent) {
+      throw new Error('Parent node not found')
+    }
+    const newNode = newNodeTree(parent.id, node.id)
+    parent.children?.push(newNode)
+    await nodeFocus(newNode.id)
+    return newNode
+  }
+
+  return { map, root, setStorage, registerNode, insertNewNodeAfter }
 }
